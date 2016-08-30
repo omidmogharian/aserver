@@ -2,8 +2,8 @@ from webob import Request, Response
 from simplejson import dumps
 import sys
 import re
-from vdbt.aserve.jsonrpcserver import JsonRpcServer
-from vdbt.aserve.uploadserver import UploadServer
+from jsonrpcserver import JsonRpcServer
+from uploadserver import UploadServer
 import optparse
 from wsgiref import simple_server
 import subprocess
@@ -11,7 +11,6 @@ from multiprocessing import cpu_count
 
 
 class App(object):
-
     server_mapping = {
         "JsonRpcServer": JsonRpcServer,
         "UploadServer": UploadServer
@@ -51,7 +50,8 @@ class App(object):
                 return callback(environ, start_response)
         return self.not_found(environ, start_response)
 
-    def serve_obj(self, expr, server=JsonRpcServer):
+    @staticmethod
+    def serve_obj(expr, server=JsonRpcServer):
         """
         import module and serve the object with desired server
         """
@@ -61,7 +61,8 @@ class App(object):
         obj = eval(expression, module.__dict__)
         return server(obj())
 
-    def index(self, environ, start_response):
+    @staticmethod
+    def index(environ, start_response):
         """This function will be mounted on "/"
         """
         resp = Response(
@@ -70,7 +71,8 @@ class App(object):
 
         return resp(environ, start_response)
 
-    def not_found(self, environ, start_response):
+    @staticmethod
+    def not_found(environ, start_response):
         """Called if no URL matches."""
         req = Request(environ)
         if req.method == 'POST':
@@ -130,6 +132,6 @@ def run_gunicorn_server(app_name):
     options, _ = parser.parse_args()
 
     cmd = "gunicorn --workers=%s %s -b %s:%s -k sync" % \
-        (options.workers, app_name, options.host, options.port)
+          (options.workers, app_name, options.host, options.port)
     print 'Serving on http://%s:%s' % (options.host, options.port)
     subprocess.call(cmd.split(" "))

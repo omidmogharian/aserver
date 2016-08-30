@@ -3,7 +3,7 @@ from webob import exc
 import cgi
 from json import dumps
 import inspect
-# from vdbt.utils import *
+from constants import FILE_UPLOAD_HEADER
 
 
 class UploadServer(object):
@@ -11,18 +11,7 @@ class UploadServer(object):
 
     def __init__(self, obj):
         self.obj = obj
-        self.response_headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST',
-            'Access-Control-Allow-Headers': (
-                'access_token, '
-                'accessToken, '
-                'origin, '
-                'x-csrftoken, '
-                'content-type, '
-                'accept'
-            ),
-            'Access-Control-Max-Age': '1728000'}
+        self.response_headers = FILE_UPLOAD_HEADER
 
     def __call__(self, environ, start_response):
         req = Request(environ)
@@ -92,14 +81,14 @@ class UploadServer(object):
             return (False, self._response())
         if req.method != "POST":
             return (False, self._response(405,
-                    "Method %s not allowed" % req.method))
+                                          "Method %s not allowed" % req.method))
         if "multipart/form-data" not in req.headers['Content-Type']:
             return (False, self._response(406, (
                 'Not acceptable Content-Type; '
                 'only multipart/form-data allowed')))
         file_number = len(filter(lambda x:
                                  isinstance(req.POST[x], cgi.FieldStorage),
-                          req.POST))
+                                 req.POST))
         if file_number > 10:
             return (False, self._response(
                 200,
